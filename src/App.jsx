@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const rows = 6;
 const columns = 7;
@@ -27,8 +27,9 @@ function App() {
     const res1 = checkLineMade(values, 0, 1);
     const res2 = checkLineMade(values, 1, 0);
     const res3 = checkLineMade(values, 1, 1);
+    const res4 = checkLineMade(values, 1, -1);
 
-    if (res1 || res2 || res3) {
+    if (res1 || res2 || res3 || res4) {
       setWinner(player);
     }
   }
@@ -74,6 +75,68 @@ function App() {
 
     return false;
   }
+
+  function getAvailableCells() {
+    const allCells = [];
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        const cellId = `row-${row}-col-${col}`;
+        if (
+          !selectedByUser.includes(cellId) &&
+          !selectedByBot.includes(cellId)
+        ) {
+          allCells.push(cellId);
+        }
+      }
+    }
+    return allCells;
+  }
+
+  function botMove() {
+    const availableCells = getAvailableCells();
+
+    for (const cell of availableCells) {
+      const simulatedBotMoves = [...selectedByBot, cell];
+      if (
+        checkLineMade(simulatedBotMoves, 0, 1) ||
+        checkLineMade(simulatedBotMoves, 1, 0) ||
+        checkLineMade(simulatedBotMoves, 1, 1) ||
+        checkLineMade(simulatedBotMoves, 1, -1)
+      ) {
+        setSelectedByBot((prev) => [...prev, cell]);
+        validateWinLogic("bot", simulatedBotMoves);
+        setCurrActive("user");
+        return;
+      }
+    }
+
+    for (const cell of availableCells) {
+      const simulatedUserMoves = [...selectedByUser, cell];
+      if (
+        checkLineMade(simulatedUserMoves, 0, 1) ||
+        checkLineMade(simulatedUserMoves, 1, 0) ||
+        checkLineMade(simulatedUserMoves, 1, 1) ||
+        checkLineMade(simulatedUserMoves, 1, -1)
+      ) {
+        setSelectedByBot((prev) => [...prev, cell]);
+        setCurrActive("user");
+        return;
+      }
+    }
+
+    if (availableCells.length > 0) {
+      const randomCell =
+        availableCells[Math.floor(Math.random() * availableCells.length)];
+      setSelectedByBot((prev) => [...prev, randomCell]);
+      setCurrActive("user");
+    }
+  }
+
+  useEffect(() => {
+    if (currActive === "bot" && !winner) {
+      botMove();
+    }
+  }, [currActive]);
 
   return (
     <div className="container">
