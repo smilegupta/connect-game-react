@@ -4,91 +4,70 @@ const rows = 6;
 const columns = 7;
 
 function App() {
-  // to show selected by user
   const [selectedByUser, setSelectedByUser] = useState([]);
-  // to show selected by bot
   const [selectedByBot, setSelectedByBot] = useState([]);
-
   const [currActive, setCurrActive] = useState("user");
   const [winner, setWinner] = useState(null);
 
   function handleCellClick(id) {
-    if (currActive === "user") {
-      setSelectedByUser((prev) => {
-        const newValues = [...prev, id];
-        validateWinLogic("user", newValues);
-        return newValues;
-      });
+    const updateState =
+      currActive === "user" ? setSelectedByUser : setSelectedByBot;
 
-      setCurrActive("bot");
-    } else {
-      setSelectedByBot((prev) => {
-        const newValues = [...prev, id];
-        validateWinLogic("bot", newValues);
-        return [...prev, id];
-      });
-
-      setCurrActive("user");
-    }
+    updateState((prev) => {
+      const newValues = [...prev, id];
+      validateWinLogic(currActive, newValues);
+      setCurrActive(currActive === "user" ? "bot" : "user");
+      return newValues;
+    });
   }
 
   function validateWinLogic(player, values) {
-    if (values.length < 4) {
-      return;
-    }
-    const res1 = checkVerticalLineMade(values);
+    if (values.length < 4) return;
 
-    const res2 = checkHorizontalLineMade(values);
+    const res1 = checkLineMade(values, 0, 1);
+    const res2 = checkLineMade(values, 1, 0);
+    const res3 = checkLineMade(values, 1, 1);
 
-    if (res1 || res2) {
+    if (res1 || res2 || res3) {
       setWinner(player);
     }
   }
 
-  function checkHorizontalLineMade(values) {
-    if (values.length < 4) {
-      return false;
-    }
+  function checkLineMade(values, deltaRow, deltaCol) {
+    const valueSet = new Set(values);
 
-    for (let i = 0; i < values.length; i++) {
-      const first = values[i].split("-");
-      // row-1-col-0
-      const currRow = Number(first[1]);
-      const currCol = Number(first[3]);
+    for (const cell of values) {
+      const [, row, , col] = cell.split("-");
+      const currRow = Number(row);
+      const currCol = Number(col);
 
-      // case 1
-      if (
-        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-        values.includes(`row-${currRow}-col-${currCol + 2}`) &&
-        values.includes(`row-${currRow}-col-${currCol + 3}`)
-      ) {
-        return true;
+      let count = 1;
+
+      for (let step = 1; step < 4; step++) {
+        if (
+          valueSet.has(
+            `row-${currRow + deltaRow * step}-col-${currCol + deltaCol * step}`
+          )
+        ) {
+          count++;
+        } else {
+          break;
+        }
       }
 
-      // case 2
-      if (
-        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-        values.includes(`row-${currRow}-col-${currCol + 2}`) &&
-        values.includes(`row-${currRow}-col-${currCol - 1}`)
-      ) {
-        return true;
+      for (let step = 1; step < 4; step++) {
+        if (
+          valueSet.has(
+            `row-${currRow - deltaRow * step}-col-${currCol - deltaCol * step}`
+          )
+        ) {
+          count++;
+        } else {
+          break;
+        }
       }
 
-      // case 3
-      if (
-        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-        values.includes(`row-${currRow}-col-${currCol - 2}`) &&
-        values.includes(`row-${currRow}-col-${currCol - 1}`)
-      ) {
-        return true;
-      }
-
-      // case 4
-      if (
-        values.includes(`row-${currRow}-col-${currCol - 3}`) &&
-        values.includes(`row-${currRow}-col-${currCol - 2}`) &&
-        values.includes(`row-${currRow}-col-${currCol - 1}`)
-      ) {
+      if (count >= 4) {
         return true;
       }
     }
@@ -96,97 +75,67 @@ function App() {
     return false;
   }
 
-  function checkVerticalLineMade(values) {
-    if (values.length < 4) {
-      return false;
-    }
-
-    for (let i = 0; i < values.length; i++) {
-      const first = values[i].split("-");
-      // row-1-col-0
-      const currRow = Number(first[1]);
-      const currCol = Number(first[3]);
-
-      // case 1
-      if (
-        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-        values.includes(`row-${currRow + 2}-col-${currCol}`) &&
-        values.includes(`row-${currRow + 3}-col-${currCol}`)
-      ) {
-        return true;
-      }
-
-      // case 2
-      if (
-        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-        values.includes(`row-${currRow + 2}-col-${currCol}`) &&
-        values.includes(`row-${currRow - 1}-col-${currCol}`)
-      ) {
-        return true;
-      }
-
-      // case 3
-      if (
-        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-        values.includes(`row-${currRow - 2}-col-${currCol}`) &&
-        values.includes(`row-${currRow - 1}-col-${currCol}`)
-      ) {
-        return true;
-      }
-
-      // case 4
-      if (
-        values.includes(`row-${currRow - 3}-col-${currCol}`) &&
-        values.includes(`row-${currRow - 2}-col-${currCol}`) &&
-        values.includes(`row-${currRow - 1}-col-${currCol}`)
-      ) {
-        return true;
-      }
-    }
-  }
-
   return (
-    <div>
-      <div>Header - todo add timer here</div>
+    <div className="container">
+      <header>
+        <h1>Connect-4 Game</h1>
+        {winner ? (
+          <h2 className="winner">🎉 Winner: {winner} 🎉</h2>
+        ) : (
+          <h2>Turn: {currActive}</h2>
+        )}
+      </header>
       <table>
         <tbody>
           {Array(rows)
             .fill(0)
-            .map((_, pidx) => {
-              return (
-                <tr key={`row-${pidx}`}>
-                  {Array(columns)
-                    .fill(0)
-                    .map((_, cidx) => {
-                      return (
-                        <td key={`col-${cidx}`}>
-                          <button
-                            onClick={() => {
-                              handleCellClick(`row-${pidx}-col-${cidx}`);
-                            }}
-                            disabled={
-                              [...selectedByBot, ...selectedByUser].includes(
-                                `row-${pidx}-col-${cidx}`
-                              ) || winner !== null
-                            }
-                          >
-                            {selectedByUser.includes(
-                              `row-${pidx}-col-${cidx}`
-                            ) && "User"}
-
-                            {selectedByBot.includes(
-                              `row-${pidx}-col-${cidx}`
-                            ) && "Bot"}
-                          </button>
-                        </td>
-                      );
-                    })}
-                </tr>
-              );
-            })}
+            .map((_, rowIdx) => (
+              <tr key={`row-${rowIdx}`}>
+                {Array(columns)
+                  .fill(0)
+                  .map((_, colIdx) => {
+                    const cellId = `row-${rowIdx}-col-${colIdx}`;
+                    return (
+                      <td key={cellId}>
+                        <button
+                          className={`cell ${
+                            selectedByUser.includes(cellId)
+                              ? "user"
+                              : selectedByBot.includes(cellId)
+                              ? "bot"
+                              : ""
+                          }`}
+                          onClick={() => handleCellClick(cellId)}
+                          disabled={
+                            [...selectedByUser, ...selectedByBot].includes(
+                              cellId
+                            ) || winner !== null
+                          }
+                        >
+                          {selectedByUser.includes(cellId)
+                            ? "U"
+                            : selectedByBot.includes(cellId)
+                            ? "B"
+                            : ""}
+                        </button>
+                      </td>
+                    );
+                  })}
+              </tr>
+            ))}
         </tbody>
       </table>
-      {winner && <h1> {winner} won</h1>}
+      <button
+        className="reset"
+        onClick={() => {
+          setSelectedByBot([]);
+          setSelectedByUser([]);
+          setCurrActive(winner);
+          setWinner(null);
+        }}
+      >
+        Reset Game
+      </button>
     </div>
   );
 }
