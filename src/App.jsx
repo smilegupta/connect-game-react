@@ -193,7 +193,7 @@ function App() {
         onClick={() => {
           setSelectedByBot([]);
           setSelectedByUser([]);
-          setCurrActive(winner);
+          setCurrActive(winner || "user");
           setWinner(null);
         }}
       >
