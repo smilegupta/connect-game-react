@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const rows = 6;
 const columns = 7;
@@ -10,159 +10,141 @@ function App() {
   const [selectedByBot, setSelectedByBot] = useState([]);
 
   const [currActive, setCurrActive] = useState("user");
-  const [nextActive, setNextActive] = useState("bot");
   const [winner, setWinner] = useState(null);
 
   function handleCellClick(id) {
     if (currActive === "user") {
       setSelectedByUser((prev) => {
-        return [...prev, id];
+        const newValues = [...prev, id];
+        validateWinLogic("user", newValues);
+        return newValues;
       });
 
-      setNextActive("bot");
+      setCurrActive("bot");
     } else {
       setSelectedByBot((prev) => {
+        const newValues = [...prev, id];
+        validateWinLogic("bot", newValues);
         return [...prev, id];
       });
-
-      setNextActive("user");
-    }
-  }
-
-  function validateWinLogic(player) {
-    if (player === "bot") {
-      if (selectedByBot.length < 4) {
-        return;
-      } else {
-        const res1 = checkVerticalLineMade(selectedByBot);
-
-        const res2 = checkHorizontalLineMade(selectedByBot);
-
-        if (res1 || res2) {
-          setWinner(player);
-        }
-      }
 
       setCurrActive("user");
     }
-
-    if (player === "user") {
-      if (selectedByUser.length < 4) {
-        return;
-      } else {
-        const res1 = checkVerticalLineMade(selectedByUser);
-        const res2 = checkHorizontalLineMade(selectedByUser);
-
-        if (res1 || res2) {
-          setWinner(player);
-        }
-      }
-
-      setCurrActive("bot");
-    }
   }
 
-  function checkVerticalLineMade(values) {
-    if (values.length < 1) {
+  function validateWinLogic(player, values) {
+    if (values.length < 4) {
       return;
     }
+    const res1 = checkVerticalLineMade(values);
 
-    const first = values[0].split("-");
-    // row-1-col-0
-    const currRow = Number(first[1]);
-    const currCol = Number(first[3]);
+    const res2 = checkHorizontalLineMade(values);
 
-    // case 1
-    if (
-      values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-      values.includes(`row-${currRow}-col-${currCol + 2}`) &&
-      values.includes(`row-${currRow}-col-${currCol + 3}`)
-    ) {
-      return true;
+    if (res1 || res2) {
+      setWinner(player);
     }
-
-    // case 2
-    if (
-      values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-      values.includes(`row-${currRow}-col-${currCol + 2}`) &&
-      values.includes(`row-${currRow}-col-${currCol - 1}`)
-    ) {
-      return true;
-    }
-
-    // case 3
-    if (
-      values.includes(`row-${currRow}-col-${currCol + 1}`) &&
-      values.includes(`row-${currRow}-col-${currCol - 2}`) &&
-      values.includes(`row-${currRow}-col-${currCol - 1}`)
-    ) {
-      return true;
-    }
-
-    // case 4
-    if (
-      values.includes(`row-${currRow}-col-${currCol - 3}`) &&
-      values.includes(`row-${currRow}-col-${currCol - 2}`) &&
-      values.includes(`row-${currRow}-col-${currCol - 1}`)
-    ) {
-      return true;
-    }
-
-    return false;
   }
 
   function checkHorizontalLineMade(values) {
-    if (values.length < 1) {
-      return;
+    if (values.length < 4) {
+      return false;
     }
 
-    const first = values[0].split("-");
-    // row-1-col-0
-    const currRow = Number(first[1]);
-    const currCol = Number(first[3]);
+    for (let i = 0; i < values.length; i++) {
+      const first = values[i].split("-");
+      // row-1-col-0
+      const currRow = Number(first[1]);
+      const currCol = Number(first[3]);
 
-    // case 1
-    if (
-      values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-      values.includes(`row-${currRow + 2}-col-${currCol}`) &&
-      values.includes(`row-${currRow + 3}-col-${currCol}`)
-    ) {
-      return true;
-    }
+      // case 1
+      if (
+        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
+        values.includes(`row-${currRow}-col-${currCol + 2}`) &&
+        values.includes(`row-${currRow}-col-${currCol + 3}`)
+      ) {
+        return true;
+      }
 
-    // case 2
-    if (
-      values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-      values.includes(`row-${currRow + 2}-col-${currCol}`) &&
-      values.includes(`row-${currRow - 1}-col-${currCol}`)
-    ) {
-      return true;
-    }
+      // case 2
+      if (
+        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
+        values.includes(`row-${currRow}-col-${currCol + 2}`) &&
+        values.includes(`row-${currRow}-col-${currCol - 1}`)
+      ) {
+        return true;
+      }
 
-    // case 3
-    if (
-      values.includes(`row-${currRow + 1}-col-${currCol}`) &&
-      values.includes(`row-${currRow - 2}-col-${currCol}`) &&
-      values.includes(`row-${currRow - 1}-col-${currCol}`)
-    ) {
-      return true;
-    }
+      // case 3
+      if (
+        values.includes(`row-${currRow}-col-${currCol + 1}`) &&
+        values.includes(`row-${currRow}-col-${currCol - 2}`) &&
+        values.includes(`row-${currRow}-col-${currCol - 1}`)
+      ) {
+        return true;
+      }
 
-    // case 4
-    if (
-      values.includes(`row-${currRow - 3}-col-${currCol}`) &&
-      values.includes(`row-${currRow - 2}-col-${currCol}`) &&
-      values.includes(`row-${currRow - 1}-col-${currCol}`)
-    ) {
-      return true;
+      // case 4
+      if (
+        values.includes(`row-${currRow}-col-${currCol - 3}`) &&
+        values.includes(`row-${currRow}-col-${currCol - 2}`) &&
+        values.includes(`row-${currRow}-col-${currCol - 1}`)
+      ) {
+        return true;
+      }
     }
 
     return false;
   }
 
-  useEffect(() => {
-    validateWinLogic(currActive);
-  }, [selectedByUser, selectedByBot]);
+  function checkVerticalLineMade(values) {
+    if (values.length < 4) {
+      return false;
+    }
+
+    for (let i = 0; i < values.length; i++) {
+      const first = values[i].split("-");
+      // row-1-col-0
+      const currRow = Number(first[1]);
+      const currCol = Number(first[3]);
+
+      // case 1
+      if (
+        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
+        values.includes(`row-${currRow + 2}-col-${currCol}`) &&
+        values.includes(`row-${currRow + 3}-col-${currCol}`)
+      ) {
+        return true;
+      }
+
+      // case 2
+      if (
+        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
+        values.includes(`row-${currRow + 2}-col-${currCol}`) &&
+        values.includes(`row-${currRow - 1}-col-${currCol}`)
+      ) {
+        return true;
+      }
+
+      // case 3
+      if (
+        values.includes(`row-${currRow + 1}-col-${currCol}`) &&
+        values.includes(`row-${currRow - 2}-col-${currCol}`) &&
+        values.includes(`row-${currRow - 1}-col-${currCol}`)
+      ) {
+        return true;
+      }
+
+      // case 4
+      if (
+        values.includes(`row-${currRow - 3}-col-${currCol}`) &&
+        values.includes(`row-${currRow - 2}-col-${currCol}`) &&
+        values.includes(`row-${currRow - 1}-col-${currCol}`)
+      ) {
+        return true;
+      }
+    }
+  }
+
   return (
     <div>
       <div>Header - todo add timer here</div>
@@ -182,10 +164,11 @@ function App() {
                             onClick={() => {
                               handleCellClick(`row-${pidx}-col-${cidx}`);
                             }}
-                            disabled={[
-                              ...selectedByBot,
-                              ...selectedByUser,
-                            ].includes(`row-${pidx}-col-${cidx}`)}
+                            disabled={
+                              [...selectedByBot, ...selectedByUser].includes(
+                                `row-${pidx}-col-${cidx}`
+                              ) || winner !== null
+                            }
                           >
                             {selectedByUser.includes(
                               `row-${pidx}-col-${cidx}`
@@ -203,7 +186,7 @@ function App() {
             })}
         </tbody>
       </table>
-      {winner && <h1> {currActive} won</h1>}
+      {winner && <h1> {winner} won</h1>}
     </div>
   );
 }
